@@ -1,0 +1,120 @@
+<script>
+  /// INSERT FORM
+  $("#btnSave").click(function () {
+    // console.log("Save Button Clicked");
+    output = "";
+    let user_id = $("#user_id").val();
+    let name = $("#nameid").val();
+    let email = $("#emailid").val();
+    let password = $("#passwordid").val();
+    let csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+    if (name == "") {
+      console.log("Enter Name");
+    } else if (email == "") {
+      console.log("Enter Email");
+    } else if (password == "") {
+      console.log("Enter Password");
+    } else {
+      data = {
+        user_id: user_id,
+        name: name,
+        email: email,
+        password: password,
+        csrfmiddlewaretoken: csrf_token,
+      };
+      $.ajax({
+        url: "{% url 'homeSave' %}",
+        method: "POST",
+        data: data,
+        dataType: "json",
+        success: function (data) {
+          // console.log(data.status);
+          response = data.response;
+          if (data.status == "Save") {
+            $("#msg").text("Form Submitted Successfully");
+            $("#msg").show();
+            // console.log(response);
+
+            for (i = 0; i < response.length; ++i) {
+              output +=
+                "<tr><td>" +
+                response[i].id +
+                "</td><td>" +
+                response[i].name +
+                "</td><td>" +
+                response[i].email +
+                "</td><td>" +
+                response[i].password +
+                "</td><td> <input type='button' value='Edit'  class='btn btn-warning btn-sm btn-edit' data-sid=" +
+                response[i].id +
+                "> <input type='button' value='Delete'  class='btn btn-danger btn-sm btn-del' data-sid=" +
+                response[i].id +
+                ">";
+            }
+            $("#tbody").html(output);
+            $("#user_id").val("");
+            $("form")[0].reset();
+          }
+          if (data.status == 0) {
+            $("#msg").text("Unable to save data");
+            $("#msg").show();
+            $("#user_id").val("");
+            $("form")[0].reset();
+          }
+        },
+      });
+    }
+  });
+
+  // DELETE DATA
+  $("tbody").on("click", ".btn-del", function () {
+    let id = $(this).attr("data-sid");
+    let csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+    data = {
+      user_id: id,
+      csrfmiddlewaretoken: csrf_token,
+    };
+    my_this = this;
+    $.ajax({
+      url: "{% url 'homedelete' %}",
+      method: "POST",
+      data: data,
+      dataType: "json",
+      success: function (data) {
+        // IF (true)
+        if (data.status) {
+          $("#msg").text("Data Deleted");
+          $("#msg").show();
+          $(my_this).closest("tr").fadeOut();
+        } else {
+          $("#msg").text("Unable to delete data");
+          $("#msg").show();
+        }
+      },
+    });
+  });
+
+  // EDITING DATA
+  $("tbody").on("click", ".btn-edit", function () {
+    console.log("EDIT BUTTON CLICKED");
+    let id = $(this).attr("data-sid");
+    let csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+    data = {
+      user_id: id,
+      csrfmiddlewaretoken: csrf_token,
+    };
+    $.ajax({
+      url: "{% url 'homeedit' %}",
+      method: "POST",
+      data: data,
+      dataType: "json",
+      success: function (data) {
+        // console.log(data);
+        $("#user_id").val(data.id);
+        $("#nameid").val(data.name);
+        $("#emailid").val(data.email);
+        $("#passwordid").val(data.password);
+      },
+    });
+  });
+</script>
